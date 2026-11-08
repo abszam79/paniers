@@ -48,6 +48,8 @@ li span:last-child{color:var(--mut)}
 <div class="row"><button id="undo">Annuler le dernier</button><button id="reset">Terminer le match</button></div>
 <ul id="log"></ul>
 <h1 style="margin-top:28px">Historique des matchs</h1>
+<div class="row"><button id="exp">Exporter l’historique</button></div>
+<textarea id="expt" style="display:none;width:100%;height:160px;margin-bottom:10px"></textarea>
 <div id="hist"></div>
 <script>
 var ST=[["i","Interceptions"],["b","Blocks"],["a","Assists"],["r","Rebonds"]],K="paniers-v1",s={name:"",q:1,log:[]},armed=false;
@@ -94,6 +96,20 @@ document.getElementById("reset").onclick=function(){
  if(s.log.length)s.hist.unshift({id:Date.now(),name:s.name,date:new Date().toLocaleDateString("fr-FR"),log:s.log});
  s={name:"",q:1,log:[],hist:s.hist};armed=false;save();render()};
 document.getElementById("name").oninput=function(e){s.name=e.target.value;save()};
+function txt(){var out=[];
+ function blk(m,t){var x=sm(m.log);return t+"\n"+x.p+" pts ("+pl(x)+")\n"+line(x)}
+ if(s.log.length)out.push(blk({log:s.log},(s.name||"Match")+" (en cours)"));
+ s.hist.forEach(function(m){out.push(blk(m,(m.name||"Match")+" – "+m.date))});
+ if(s.hist.length){var all={p:0,p1:0,p2:0,p3:0,i:0,b:0,a:0,r:0};
+  s.hist.forEach(function(m){var x=sm(m.log);for(var k in all)all[k]+=x[k]});
+  out.push("CUMUL "+s.hist.length+" match"+(s.hist.length>1?"s":"")+" : "+all.p+" pts, moy. "+(all.p/s.hist.length).toFixed(1).replace(".",",")+"\n"+pl(all)+"\n"+line(all))}
+ return "Stats basket\n\n"+out.join("\n\n")}
+document.getElementById("exp").onclick=function(){
+ var t=txt(),ta=document.getElementById("expt"),b=document.getElementById("exp");
+ function show(){ta.style.display="block";ta.value=t;ta.select()}
+ if(navigator.share){navigator.share({text:t}).catch(function(){});return}
+ if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(function(){b.textContent="Copié !";setTimeout(function(){b.textContent="Exporter l’historique"},2000)},show);return}
+ show()};
 render();
 </script>
 </body>
